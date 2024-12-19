@@ -126,7 +126,7 @@ app.get('/favourites/:userId', async (req, res) => {
 });
 
 // 启动服务器
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 333;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
