@@ -125,6 +125,61 @@ app.get('/favourites/:userId', async (req, res) => {
   }
 });
 
+// Additional Routes for Deleting Cart and Favourites
+app.delete('/cart/:cartId', async (req, res) => {
+  const { cartId } = req.params;
+  try {
+    await pool.query('DELETE FROM cart WHERE cart_id = $1', [cartId]);
+    res.json({ message: 'Item removed from cart' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to remove item from cart' });
+  }
+});
+
+app.delete('/favourites', async (req, res) => {
+  const { userId, productId } = req.body;
+  try {
+    await pool.query('DELETE FROM favourites WHERE user_id = $1 AND product_id = $2', [userId, productId]);
+    res.json({ message: 'Item removed from favourites' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to remove item from favourites' });
+  }
+});
+
+// Order Management Routes
+app.post('/orders', async (req, res) => {
+  const { userId, totalPrice, addressId } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO orders (user_id, total_price, address_id) VALUES ($1, $2, $3) RETURNING order_id',
+      [userId, totalPrice, addressId]
+    );
+    res.json({ orderId: result.rows[0].order_id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+app.get('/orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT o.order_id, o.total_price, o.created_at, a.address_line, a.city, a.postal_code, a.country
+       FROM orders o
+       JOIN addresses a ON o.address_id = a.address_id
+       WHERE o.user_id = $1`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
 // 启动服务器
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
