@@ -48,6 +48,24 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.post('/login-farmer', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM sellers WHERE email = $1 AND password_hash = $2',
+      [email, password]
+    );
+    if (result.rows.length === 0) {
+      res.status(401).json({ error: 'Invalid credentials' });
+    } else {
+      res.json(result.rows[0]);
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
 // 获取商品列表
 app.get('/products', async (req, res) => {
   try {
