@@ -194,6 +194,20 @@ app.post('/products', async (req, res) => {
   }
 });
 
+app.post('/register-farmer', async (req, res) => {
+  const { email, password, storeName, contactNumber } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO sellers (email, password_hash, store_name, contact_number) VALUES ($1, $2, $3, $4)',
+      [email, password,storeName, contactNumber]
+    );
+    res.json({ message: 'Farmer registered successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Farmer registration failed' });
+  }
+});
+
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
