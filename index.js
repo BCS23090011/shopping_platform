@@ -144,16 +144,36 @@ app.get('/favourites/:userId', async (req, res) => {
 });
 
 // Additional Routes for Deleting Cart and Favourites
+// DELETE cart item by cartId (default behavior)
 app.delete('/cart/:cartId', async (req, res) => {
   const { cartId } = req.params;
   try {
-    await pool.query('DELETE FROM cart WHERE cart_id = $1', [cartId]);
+    const result = await pool.query('DELETE FROM cart WHERE cart_id = $1', [cartId]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
     res.json({ message: 'Item removed from cart' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to remove item from cart' });
   }
 });
+
+// DELETE cart item by userId and productId
+app.delete('/cart', async (req, res) => {
+  const { userId, productId } = req.body;
+  try {
+    const result = await pool.query('DELETE FROM cart WHERE user_id = $1 AND product_id = $2', [userId, productId]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    res.json({ message: 'Item removed from cart' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to remove item from cart' });
+  }
+});
+
 
 app.delete('/favourites', async (req, res) => {
   const { userId, productId } = req.body;
