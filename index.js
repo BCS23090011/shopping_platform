@@ -180,6 +180,21 @@ app.get('/orders/:userId', async (req, res) => {
   }
 });
 
+app.post('/products', async (req, res) => {
+  const { product_name, description, price, image_url, seller_id } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO products (product_name, description, price, image_url, seller_id) VALUES ($1, $2, $3, $4, $5)',
+      [product_name, description, price, image_url, seller_id]
+    );
+    res.json({ message: 'Product uploaded successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to upload product' });
+  }
+});
+
+
 // 启动服务器
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
