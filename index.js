@@ -269,20 +269,35 @@ app.post('/address', async (req, res) => {
 app.get('/address/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
-    const result = await pool.query(
+    // Query to get the default address first
+    const defaultAddressResult = await pool.query(
       'SELECT * FROM addresses WHERE user_id = $1 AND is_default = true LIMIT 1',
       [userId]
     );
-    if (result.rows.length > 0) {
-      res.status(200).json(result.rows[0]);
+
+    if (defaultAddressResult.rows.length > 0) {
+      // Return the default address if it exists
+      return res.status(200).json(defaultAddressResult.rows[0]);
+    }
+
+    // If no default address, fetch any address for the user
+    const anyAddressResult = await pool.query(
+      'SELECT * FROM addresses WHERE user_id = $1 ORDER BY created_at ASC LIMIT 1',
+      [userId]
+    );
+
+    if (anyAddressResult.rows.length > 0) {
+      return res.status(200).json(anyAddressResult.rows[0]);
     } else {
-      res.status(404).json({ error: 'No default address found' });
+      // No address found
+      return res.status(404).json({ error: 'No address found for this user' });
     }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch address' });
   }
 });
+
 
 
 // 启动服务器
