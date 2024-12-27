@@ -248,23 +248,24 @@ app.post('/register-farmer', async (req, res) => {
 
 // Add this in your backend code (index.js or server.js)
 app.post('/address', async (req, res) => {
-  const { userId, address } = req.body;
+  const { userId, addressLine, city, postalCode, country, isDefault } = req.body;
 
-  if (!userId || !address) {
-    return res.status(400).json({ error: 'User ID and Address are required' });
+  if (!userId || !addressLine || !city || !postalCode || !country) {
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    await pool.query(
-      'INSERT INTO addresses (user_id, address) VALUES ($1, $2)',
-      [userId, address]
+    const result = await pool.query(
+      'INSERT INTO addresses (user_id, address_line, city, postal_code, country, is_default, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
+      [userId, addressLine, city, postalCode, country, isDefault || false]
     );
-    res.status(200).json({ message: 'Address saved successfully' });
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to save address' });
   }
 });
+
 
 
 // 启动服务器
