@@ -187,19 +187,6 @@ app.delete('/favourites', async (req, res) => {
 });
 
 // Order Management Routes
-app.post('/orders', async (req, res) => {
-  const { userId, totalPrice, addressId } = req.body;
-  try {
-    const result = await pool.query(
-      'INSERT INTO orders (user_id, total_price, address_id) VALUES ($1, $2, $3) RETURNING order_id',
-      [userId, totalPrice, addressId]
-    );
-    res.json({ orderId: result.rows[0].order_id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create order' });
-  }
-});
 
 app.post('/orders', async (req, res) => {
   const { userId, totalPrice, address } = req.body;
