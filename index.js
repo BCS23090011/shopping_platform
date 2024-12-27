@@ -246,6 +246,26 @@ app.post('/register-farmer', async (req, res) => {
   }
 });
 
+// Add this in your backend code (index.js or server.js)
+app.post('/address', async (req, res) => {
+  const { userId, address } = req.body;
+
+  if (!userId || !address) {
+    return res.status(400).json({ error: 'User ID and Address are required' });
+  }
+
+  try {
+    await pool.query(
+      'INSERT INTO addresses (user_id, address) VALUES ($1, $2)',
+      [userId, address]
+    );
+    res.status(200).json({ message: 'Address saved successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save address' });
+  }
+});
+
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
