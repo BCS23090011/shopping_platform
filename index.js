@@ -203,17 +203,42 @@ app.post('/orders', async (req, res) => {
 
 app.post('/orders', async (req, res) => {
   const { userId, totalPrice, address } = req.body;
+
+  if (!userId || !totalPrice || !address) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
   try {
+    // Check if the address_id is already provided
+    let addressId = address.address_id;
+
+    // If not, fetch address_id from the database
+    if (!addressId) {
+      const addressResult = await pool.query(
+        'SELECT address_id FROM addresses WHERE user_id = $1 AND address_line = $2 AND city = $3 AND postal_code = $4 AND country = $5 LIMIT 1',
+        [userId, address.addressLine, address.city, address.postalCode, address.country]
+      );
+
+      if (addressResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Address not found' });
+      }
+
+      addressId = addressResult.rows[0].address_id;
+    }
+
+    // Insert order into the database
     const result = await pool.query(
       'INSERT INTO orders (user_id, total_price, address_id, created_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
-      [userId, totalPrice, address.address_id]
+      [userId, totalPrice, addressId]
     );
+
     res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create order' });
   }
 });
+
 app.post('/order-details', async (req, res) => {
   const { orderId, productId, quantity, price } = req.body;
   try {
