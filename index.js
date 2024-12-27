@@ -69,13 +69,20 @@ app.post('/login-farmer', async (req, res) => {
 // 获取商品列表
 app.get('/products', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM products');
-    res.json(result.rows);
+    // Fetch products along with their associated store names
+    const result = await pool.query(
+      `SELECT p.product_id, p.product_name, p.description, p.price, p.image_url, s.store_name
+       FROM products p
+       JOIN sellers s ON p.seller_id = s.seller_id`
+    );
+
+    res.status(200).json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
 
 // 添加商品到购物车
 app.post('/cart', async (req, res) => {
