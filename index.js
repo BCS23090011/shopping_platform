@@ -241,7 +241,9 @@ app.post('/products', async (req, res) => {
   const { product_name, description, price, image_url, seller_id } = req.body;
   try {
     await pool.query(
-      'INSERT INTO products (product_name, description, price, image_url, seller_id) VALUES ($1, $2, $3, $4, $5)',
+      `SELECT p.product_id, p.product_name, p.description, p.price, p.image_url, s.store_name
+       FROM products p
+       JOIN sellers s ON p.seller_id = s.seller_id`,
       [product_name, description, price, image_url, seller_id]
     );
     res.json({ message: 'Product uploaded successfully' });
