@@ -201,22 +201,33 @@ app.post('/orders', async (req, res) => {
   }
 });
 
-app.get('/orders/:userId', async (req, res) => {
-  const { userId } = req.params;
+app.post('/orders', async (req, res) => {
+  const { userId, totalPrice, address } = req.body;
   try {
     const result = await pool.query(
-      `SELECT o.order_id, o.total_price, o.created_at, a.address_line, a.city, a.postal_code, a.country
-       FROM orders o
-       JOIN addresses a ON o.address_id = a.address_id
-       WHERE o.user_id = $1`,
-      [userId]
+      'INSERT INTO orders (user_id, total_price, address_id, created_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
+      [userId, totalPrice, address.address_id]
     );
-    res.json(result.rows);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    res.status(500).json({ error: 'Failed to create order' });
   }
 });
+app.post('/order-details', async (req, res) => {
+  const { orderId, productId, quantity, price } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO order_details (order_id, product_id, quantity, price, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+      [orderId, productId, quantity, price]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create order detail' });
+  }
+});
+
 
 app.post('/products', async (req, res) => {
   const { product_name, description, price, image_url, seller_id } = req.body;
