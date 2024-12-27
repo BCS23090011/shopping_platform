@@ -317,6 +317,45 @@ app.get('/address/:userId', async (req, res) => {
   }
 });
 
+app.get('/buyer-orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, p.product_name 
+       FROM orders o
+       JOIN order_details od ON o.order_id = od.order_id
+       JOIN products p ON od.product_id = p.product_id
+       WHERE o.user_id = $1`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch buyer orders' });
+  }
+});
+
+
+app.get('/seller-orders/:sellerId', async (req, res) => {
+  const { sellerId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, p.product_name, p.description
+       FROM orders o
+       JOIN order_details od ON o.order_id = od.order_id
+       JOIN products p ON od.product_id = p.product_id
+       WHERE p.seller_id = $1`,
+      [sellerId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch seller orders' });
+  }
+});
+
 
 
 // 启动服务器
