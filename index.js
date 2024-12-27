@@ -322,10 +322,12 @@ app.get('/buyer-orders/:userId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, p.product_name 
+      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, 
+              p.product_name, a.address_line, a.city, a.postal_code, a.country
        FROM orders o
        JOIN order_details od ON o.order_id = od.order_id
        JOIN products p ON od.product_id = p.product_id
+       JOIN addresses a ON o.address_id = a.address_id
        WHERE o.user_id = $1`,
       [userId]
     );
@@ -342,10 +344,12 @@ app.get('/seller-orders/:sellerId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, p.product_name, p.description
+      `SELECT o.order_id, o.total_price, o.created_at, od.product_id, od.quantity, od.price, 
+              p.product_name, p.description, a.address_line, a.city, a.postal_code, a.country
        FROM orders o
        JOIN order_details od ON o.order_id = od.order_id
        JOIN products p ON od.product_id = p.product_id
+       JOIN addresses a ON o.address_id = a.address_id
        WHERE p.seller_id = $1`,
       [sellerId]
     );
@@ -355,8 +359,6 @@ app.get('/seller-orders/:sellerId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch seller orders' });
   }
 });
-
-
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
